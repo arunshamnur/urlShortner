@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -21,7 +22,16 @@ type UrlStruct struct {
 var urlStructs []UrlStruct
 
 
+var INPUTFILEFORETLDATAPROCESSING = "url.json"
 
+func writeFile(b []byte) bool {
+	err3 := ioutil.WriteFile(INPUTFILEFORETLDATAPROCESSING, b, 0644)
+	if err3 != nil {
+		//fmt.Println("Error occur when writing to a file: %s", err3)
+		return false
+	}
+	return true
+}
 func shortUrl(w http.ResponseWriter, r *http.Request) {
 //	main function for handling url shortning
 	reqBody, _ := ioutil.ReadAll(r.Body)
@@ -50,10 +60,20 @@ func shortUrl(w http.ResponseWriter, r *http.Request) {
 		urlStruct.Id, _ = h.Encode([]int{int(now.Unix())})
 		urlStruct.ShortenedUrl =  "http://localhost:3000/" + urlStruct.Id
 		urlStructs = append(urlStructs, urlStruct)
-		w.Header().Add("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		fmt.Printf("Successfully Shortened  the Url:%v",urlStructs)
-		json.NewEncoder(w).Encode(urlStruct)
+		b, err := json.MarshalIndent(urlStructs,"","\t")
+		if err != nil {
+			fmt.Printf( "Error occur when marshalling request data: %v", err)
+		}
+		if writeFile(b) {
+			w.Header().Add("Content-Type", "application/json")
+			w.WriteHeader(http.StatusCreated)
+			fmt.Printf("Successfully Shortened  the Url:%v",urlStruct)
+			json.NewEncoder(w).Encode(urlStruct)
+		}else{
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, "Successfully Shortened Url,But Got Error  While  Updated Storage File  %s:\n", urlStruct.OriginalUrl)
+			json.NewEncoder(w).Encode(urlStruct)
+		}
 	}
 }
 
@@ -73,5 +93,18 @@ func apiRequests() {
 
 func main() {
 	//main function
+	if _, err := os.Stat(INPUTFILEFORETLDATAPROCESSING); err == nil {
+		content, err1 := ioutil.ReadFile(INPUTFILEFORETLDATAPROCESSING)
+		if err1 != nil {
+			fmt.Println("Error when opening storage file for short and original url's: ", err1)
+		}
+		if len(content)>0 {
+			err2 := json.Unmarshal(content, &urlStructs)
+			if err2 != nil {
+				fmt.Println("Error while unmarshaling contents of  storage file for short and original url's: ", err2)
+			}
+		}
+	}
 	apiRequests()
 }
+

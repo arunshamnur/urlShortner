@@ -42,7 +42,7 @@ func shortUrl(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Error occur when marshalling request data: %v\n", err)
 	}else if urlStruct.OriginalUrl == ""{
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Printf("Error occur when marshalling request data: %v\n", err)
+		fmt.Printf("originalUrl data is empty:\n")
 		return
 	}else {
 		for _, url := range urlStructs {
@@ -77,6 +77,16 @@ func shortUrl(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getUrByld(w http.ResponseWriter, r *http.Request){
+	vars := mux.Vars(r)
+	key := vars["id"]
+	for _, url := range urlStructs {
+		if url.Id == key {
+			json.NewEncoder(w).Encode(url)
+		}
+	}
+}
+
 func returnAllShortenedUrl(w http.ResponseWriter, r *http.Request){
 //	function for returning all previous shortened url's
 	json.NewEncoder(w).Encode(urlStructs)
@@ -87,6 +97,7 @@ func apiRequests() {
 	route := mux.NewRouter().StrictSlash(true)
 	route.HandleFunc("/", shortUrl).Methods("POST")
 	route.HandleFunc("/", returnAllShortenedUrl).Methods("GET")
+	route.HandleFunc("/url/{id}", getUrByld).Methods("GET")
 	log.Fatal(http.ListenAndServe(":3000", route))
 }
 
@@ -107,5 +118,6 @@ func main() {
 	}
 	apiRequests()
 }
+
 
 

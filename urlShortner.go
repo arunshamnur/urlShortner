@@ -48,6 +48,7 @@ func shortUrl(w http.ResponseWriter, r *http.Request) {
 		for _, url := range urlStructs {
 			if url.OriginalUrl == urlStruct.OriginalUrl {
 				w.WriteHeader(http.StatusOK)
+				fmt.Printf("Url %s is already shortened, and Shortened url is %s\n", url.OriginalUrl, url.ShortenedUrl)
 				fmt.Fprintf(w,"Url %s is already shortened, and Shortened url is %s\n", url.OriginalUrl, url.ShortenedUrl)
 				return
 			}
@@ -67,11 +68,11 @@ func shortUrl(w http.ResponseWriter, r *http.Request) {
 		if writeFile(b) {
 			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusCreated)
-			fmt.Printf("Successfully Shortened  the Url:%v",urlStruct)
+			fmt.Printf("Successfully Shortened  the Url:%v\n", urlStruct)
 			json.NewEncoder(w).Encode(urlStruct)
 		}else{
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, "Successfully Shortened Url,But Got Error  While  Updated Storage File  %s:\n", urlStruct.OriginalUrl)
+			fmt.Printf("Successfully Shortened Url,But Got Error  While  Updated Storage File  %s:\n", urlStruct.OriginalUrl)
 			json.NewEncoder(w).Encode(urlStruct)
 		}
 	}
@@ -82,9 +83,12 @@ func getUrByld(w http.ResponseWriter, r *http.Request){
 	key := vars["id"]
 	for _, url := range urlStructs {
 		if url.Id == key {
+			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(url)
+			return
 		}
 	}
+	w.WriteHeader(http.StatusBadRequest)
 }
 
 func returnAllShortenedUrl(w http.ResponseWriter, r *http.Request){
@@ -118,6 +122,8 @@ func main() {
 	}
 	apiRequests()
 }
+
+
 
 
 

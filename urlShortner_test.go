@@ -54,7 +54,7 @@ func TestCreateShorturl(t *testing.T) {
 	url := "http://localhost:3000/"
 	var id string
 	tests := []TestStruct{
-		{`{}`, BadRequestCode, "", 0, ""},
+		{``, BadRequestCode, "", 0, ""},
 		{`{"originalUrl":""}`, BadRequestCode, "", 0, ""},
 		{`{"originalUrl":"https://www.youtube.com/watch?v=CBVJTplw4cE"}`, StatusCreated, "", 0,""},
 		{`{"originalUrl":"https://www.youtube.com/watch?v=CBVJTplw4cE"}`, SuccessRequestCode, "", 0,""},
